@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, jsonify
 from pymongo import MongoClient
 import requests as requests
@@ -11,9 +10,10 @@ app = Flask(__name__)
 client = MongoClient('localhost', 27017)
 db = client.get_database('sparta')
 
+
 # API 추가
-@app.route('/', methods=['GET']) # 데코레이터 문법
-def index(): # 함수 이름은 고유해야 한다.
+@app.route('/', methods=['GET'])  # 데코레이터 문법
+def index():  # 함수 이름은 고유해야 한다.
     return render_template('index.html', test='테스트')
 
 
@@ -53,8 +53,20 @@ def save_memo():
     db.articles.insert_one(document)
 
     return jsonify(
-        {'result': 'success'}
+        {'result': 'success', 'msg': '저장했습니다.'}
     )
+
+
+@app.route('/memo', methods=['GET'])
+def list_memo():
+    memos = list(db.articles.find({}, {'_id': False}))
+    result = {
+        'result': 'success',
+        'articles': memos,
+    }
+
+    return jsonify(result)
+
 
 
 # app.py 파일을 직접 실행 시킬 때 동작시킴
@@ -64,5 +76,4 @@ if __name__ == '__main__':
         '0.0.0.0',  # 모든 IP에서 오는 요청을 허용
         7000,  # 플라스크 웹 서버는 7000번 포트 사용 (1024보다만 크면 됨)
         debug=True,  # 에러 발생 시 에러 로그 보여줌
-
     )
