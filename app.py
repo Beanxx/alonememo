@@ -14,7 +14,8 @@ db = client.get_database('sparta')
 # API 추가
 @app.route('/', methods=['GET'])  # 데코레이터 문법
 def index():  # 함수 이름은 고유해야 한다.
-    return render_template('index.html', test='테스트')
+    memos = list(db.articles.find({}, {'_id': False}))
+    return render_template('index.html', test='테스트', memos=memos)
 
 
 # 아티클 추가 API
