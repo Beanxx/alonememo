@@ -72,6 +72,8 @@
                     success: function (response) { // 성공하면
                         if (response["result"] == "success") {
                             alert(response["msg"]);
+                            // 페이지를 처음부터 다시 로드
+                            document.location.reload()
                         }
                     }
                 })
