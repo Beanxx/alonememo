@@ -15,6 +15,8 @@
               crossorigin="anonymous">
 
         <!-- JS -->
+        <script type="text/javascript" src="https://static.nid.naver.com/js/naverLogin_implicit-1.0.3.js"
+                charset="utf-8"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 
         <!-- 쿠키 사용을 위한 Jquery-cookie 임포트 -->
@@ -71,5 +73,16 @@
             <button class="btn btn-primary" onclick="login()">로그인</button>
             <a href="/register">회원이 아니라면?</a>
         </div>
+
+
+        <script type="text/javascript">
+            var naver_id_login = new naver_id_login("{{ CLIENT_IP }}", "{{ CALLBACK_URL }}");
+            var state = naver_id_login.getUniqState();
+
+            naver_id_login.setButton("white", 2, 40);
+            naver_id_login.setDomain("{{ SERVICE_URL }}");
+            naver_id_login.setState(state);
+            naver_id_login.init_naver_id_login();
+        </script>
     </body>
 </html>

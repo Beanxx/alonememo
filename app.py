@@ -21,6 +21,9 @@ db = client.get_database('sparta')
 load_dotenv()
 # load_dotenv() 설정
 JWT_SECRET = os.environ['JWT_SECRET']
+CLIENT_ID = os.environ['CLIENT_ID']
+CALLBACK_URL = os.environ['CLIENT_ID']
+SERVICE_URL = os.environ['SERVICE_ID']
 
 
 # API 추가
@@ -44,7 +47,12 @@ def index():  # 함수 이름은 고유해야 한다
 # 로그인
 @app.route('/login', methods=['GET'])
 def login():
-    return render_template('login.html')
+    return render_template(
+        'login.html',
+        CLIENT_ID=CLIENT_ID,
+        CALLBACK_URL=CALLBACK_URL,
+        SERVICE_URL=SERVICE_URL
+    )
 
 
 # 가입
@@ -156,6 +164,7 @@ def save_memo():
         )
     except jwt.ExpiredSignatureError:
         return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
+
 
 @app.route('/memo', methods=['GET'])
 def list_memo():
