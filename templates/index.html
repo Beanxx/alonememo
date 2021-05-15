@@ -13,6 +13,10 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
                 integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
                 crossorigin="anonymous"></script>
+
+        <!--jQuery 쿠키 관리 플러그인-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+
         <!-- 구글폰트 -->
         <link href="https://fonts.googleapis.com/css?family=Stylish&display=swap" rel="stylesheet">
         <title>스파르타코딩클럽 | 나홀로 메모장</title>
@@ -44,6 +48,7 @@
             $(document).ready(function () {
                 // $("#cards-box").html("");
                 // showArticles();
+                setUserInfo()
             });
 
             function openClose() {
@@ -114,10 +119,40 @@
                 </div>`
                 $('#cards-box').append(tempHtml)
             }
+
+            function setUserInfo() {
+                let userInfo = $('#user-info')
+                let token = $.cookie('loginToken')
+
+                if (token === undefined) {
+                    window.location.href = '/login'
+                } else {
+                    // JWT에 해당하는 사용자 정보를 받아오기
+                    $.ajax({
+                        type: 'POST',
+                        url: '/user',
+                        headers: {'authorization': `Bearer ${token}`},
+                        data: {},
+                        success: function (response) {
+                            if (response['result'] === 'success') {
+                                let id = response['id']
+                                userInfo.append(`
+                                <div class="btn btn-primary">${id}</div>
+                                <div class="btn btn-primary" onClick="logOut()">LOGOUT</div>
+                            `)
+                            } else {
+                                alert('다시 로그인해주세요.')
+                                window.location.href = '/login'
+                            }
+                        }
+                    })
+                }
+            }
         </script>
     </head>
     <body>
         <div class="wrap">
+            <div id="user-info"></div>
             <div class="jumbotron">
                 <h1 class="display-4">{{ test }} 메모장!</h1>
                 <p class="lead">중요한 링크를 저장해두고, 나중에 볼 수 있는 공간입니다</p>

@@ -1,7 +1,14 @@
-from flask import Flask, render_template, request, jsonify
-from pymongo import MongoClient
-import requests as requests
+import datetime
+import hashlib
+import os
+
+import jwt
+import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from flask import Flask, render_template, request, jsonify
+
+from pymongo import MongoClient
 
 # 플라스크 웹 서버 생성하기
 app = Flask(__name__)
@@ -10,12 +17,90 @@ app = Flask(__name__)
 client = MongoClient('localhost', 27017)
 db = client.get_database('sparta')
 
+# .env 파일 읽어와 환경변수로 추가
+load_dotenv()
+# load_dotenv() 설정
+JWT_SECRET = os.environ['JWT_SECRET']
 
 # API 추가
 @app.route('/', methods=['GET'])  # 데코레이터 문법
-def index():  # 함수 이름은 고유해야 한다.
-    memos = list(db.articles.find({}, {'_id': False}))
+def index():  # 함수 이름은 고유해야 한다
+    token = request.cookies.get('loginToken')
+
+    if token:
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+            id = payload['id']
+            memos = list(db.articles.find({'id': id}, {'_id': False}))
+        except jwt.ExpiredSignatureError:
+            memos = []
+    else:
+        memos = []
+
     return render_template('index.html', test='테스트', memos=memos)
+
+
+# 로그인
+@app.route('/login', methods=['GET'])
+def login():
+    return render_template('login.html')
+
+
+# 가입
+@app.route('/register', methods=['GET'])
+def register():
+    return render_template('register.html')
+
+
+# 가입 API
+@app.route('/api/register', methods=['POST'])
+def api_register():
+    id = request.form['id_give']
+    pw = request.form['pw_give']
+
+    pw_hash = hashlib.sha256(pw.encode()).hexdigest()
+    db.user.insert_one({'id': id, 'pw': pw_hash})
+
+    return jsonify({'result': 'success'})
+
+
+# 로그인 API
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    id = request.form['id_give']
+    pw = request.form['pw_give']
+
+    pw_hash = hashlib.sha256(pw.encode()).hexdigest()
+    user = db.user.find_one({'id': id, 'pw': pw_hash})
+
+    # 로그인 성공 시 JWT 리턴
+    if user:
+        expiration_time = datetime.timedelta(hours=1)
+        payload = {
+            'id': id,
+            # JWT 유효 기간 - 이 시간 이후에는 JWT 인증이 불가능합니다.
+            'exp': datetime.datetime.utcnow() + expiration_time,
+        }
+        token = jwt.encode(payload, JWT_SECRET).decode()
+        return jsonify({'result': 'success', 'token': token, 'msg': '로그인 성공'})
+
+    return jsonify({'result': 'fail', 'msg': '아이디 비밀번호 불일치'})
+
+
+@app.route('/user', methods=['POST'])
+def user():
+    token_receive = request.headers['authorization']
+    token = token_receive.split()[1]
+    print(token)
+
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+        print(payload)
+        id = payload['id']
+        return jsonify({'result': 'success', 'id': id})
+    except jwt.exceptions.ExpiredSignatureError:
+        # try 부분을 실행했지만 위와 같은 에러가 난다면
+        return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
 
 
 # 아티클 추가 API
@@ -67,7 +152,6 @@ def list_memo():
     }
 
     return jsonify(result)
-
 
 
 # app.py 파일을 직접 실행 시킬 때 동작시킴
