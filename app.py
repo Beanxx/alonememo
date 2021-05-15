@@ -23,7 +23,6 @@ load_dotenv()
 JWT_SECRET = os.environ['JWT_SECRET']
 
 
-
 # API 추가
 @app.route('/', methods=['GET'])  # 데코레이터 문법
 def index():  # 함수 이름은 고유해야 한다
@@ -82,13 +81,16 @@ def api_register_naver():
     if not db.user.find_one({'id': naver_id}, {'_id': False}):
         db.user.insert_one({'id': naver_id, 'pw': ''})
 
+    # JWT 발급
     expiration_time = datetime.timedelta(hours=1)
+
     payload = {
         'id': naver_id,
         # JWT 유효 기간 - 이 시간 이후에는 JWT 인증이 불가능합니다.
-        'exp': datetime.datetime.utcnow() + expiration_time,
+        'exp': datetime.datetime.utcnow() + expiration_time
     }
     token = jwt.encode(payload, JWT_SECRET)
+    print(token)
 
     return jsonify({'result': 'success', 'token': token})
 

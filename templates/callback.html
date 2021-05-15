@@ -46,14 +46,13 @@
                 // 여기서 쿠기에 JWT 저장
                 // index.html 리다이렉트
 
-
                 // 네아로 정보를 이용해 회원가입하고 JWT 쿠키에 저장
                 $.ajax({
                     type: "POST",
                     url: "/api/register/naver",
                     data: {'naver_id_give': naver_id},
                     success: function (response) {
-                        if (response['result'] == 'success') {
+                        if (response['result'] === 'success') {
                             // 로그인이 정상적으로 되면, 토큰을 받아옵니다.
                             // 이 토큰을 mytoken이라는 키 값으로 쿠키에 저장합니다.
                             $.cookie('loginToken', response['token']);
@@ -63,10 +62,11 @@
                         } else {
                             // 로그인이 안되면 에러메시지를 띄웁니다.
                             alert(response['네이버 로그인 실패'])
+                            window.location.href = '/login'
                         }
                     }
                 })
-                alert(naver_id_login.getProfileData('email'));
+
             }
         </script>
     </body>
