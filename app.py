@@ -21,9 +21,7 @@ db = client.get_database('sparta')
 load_dotenv()
 # load_dotenv() 설정
 JWT_SECRET = os.environ['JWT_SECRET']
-CLIENT_ID = os.environ['CLIENT_ID']
-CALLBACK_URL = os.environ['CLIENT_ID']
-SERVICE_URL = os.environ['SERVICE_ID']
+
 
 
 # API 추가
@@ -47,6 +45,10 @@ def index():  # 함수 이름은 고유해야 한다
 # 로그인
 @app.route('/login', methods=['GET'])
 def login():
+    CLIENT_ID = os.environ['CLIENT_ID']
+    CALLBACK_URL = os.environ['CALLBACK_URL']
+    SERVICE_URL = os.environ['SERVICE_URL']
+
     return render_template(
         'login.html',
         CLIENT_ID=CLIENT_ID,
@@ -59,6 +61,36 @@ def login():
 @app.route('/register', methods=['GET'])
 def register():
     return render_template('register.html')
+
+
+# 네아로 콜백
+@app.route('/naver', methods=['GET'])
+def callback():
+    CLIENT_ID = os.environ['CLIENT_ID']
+    CALLBACK_URL = os.environ['CALLBACK_URL']
+
+    return render_template('callback.html', CALLBACK_URL=CALLBACK_URL, CLIENT_ID=CLIENT_ID)
+
+
+# 네이버 가입 API
+@app.route('/api/register/naver', methods=['POST'])
+def api_register_naver():
+    naver_id = request.form['naver_id_give']
+    print(naver_id)
+
+    # 아직 가입하지 않은 naver id 케이스에서는 가입까지 처리
+    if not db.user.find_one({'id': naver_id}, {'_id': False}):
+        db.user.insert_one({'id': naver_id, 'pw': ''})
+
+    expiration_time = datetime.timedelta(hours=1)
+    payload = {
+        'id': naver_id,
+        # JWT 유효 기간 - 이 시간 이후에는 JWT 인증이 불가능합니다.
+        'exp': datetime.datetime.utcnow() + expiration_time,
+    }
+    token = jwt.encode(payload, JWT_SECRET)
+
+    return jsonify({'result': 'success', 'token': token})
 
 
 # 가입 API
