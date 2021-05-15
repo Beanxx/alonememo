@@ -22,6 +22,7 @@ load_dotenv()
 # load_dotenv() 설정
 JWT_SECRET = os.environ['JWT_SECRET']
 
+
 # API 추가
 @app.route('/', methods=['GET'])  # 데코레이터 문법
 def index():  # 함수 이름은 고유해야 한다
@@ -30,8 +31,8 @@ def index():  # 함수 이름은 고유해야 한다
     if token:
         try:
             payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
-            id = payload['id']
-            memos = list(db.articles.find({'id': id}, {'_id': False}))
+            print(payload)
+            memos = list(db.articles.find({'id': payload['id']}, {'_id': False}))
         except jwt.ExpiredSignatureError:
             memos = []
     else:
@@ -89,6 +90,8 @@ def api_login():
 
 @app.route('/user', methods=['POST'])
 def user():
+
+
     token_receive = request.headers['authorization']
     token = token_receive.split()[1]
     print(token)
@@ -111,6 +114,20 @@ def save_memo():
     comment_receive = form['comment_give']
 
     print(url_receive, comment_receive)
+
+    token_receive = request.headers['authorization']
+    token = token_receive.split()[1]
+    print(token)
+
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+        print(payload)
+        id = payload['id']
+        return jsonify({'result': 'success', 'id': id})
+    except jwt.exceptions.ExpiredSignatureError:
+        # try 부분을 실행했지만 위와 같은 에러가 난다면
+        return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
+
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36'}  # chrome
@@ -135,6 +152,7 @@ def save_memo():
         'description': description['content'],
         'url': url['content'],
         'comment': comment_receive,
+        'id': payload['id']
     }
     db.articles.insert_one(document)
 

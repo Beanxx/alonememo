@@ -10,13 +10,11 @@
               crossorigin="anonymous">
         <!-- JS -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <!--jQuery 쿠키 관리 플러그인-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
                 integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
                 crossorigin="anonymous"></script>
-
-        <!--jQuery 쿠키 관리 플러그인-->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
-
         <!-- 구글폰트 -->
         <link href="https://fonts.googleapis.com/css?family=Stylish&display=swap" rel="stylesheet">
         <title>스파르타코딩클럽 | 나홀로 메모장</title>
@@ -44,12 +42,41 @@
                 border-radius: 5px;
             }
         </style>
+
         <script>
             $(document).ready(function () {
-                // $("#cards-box").html("");
-                // showArticles();
                 setUserInfo()
             });
+
+            function setUserInfo() {
+                let userInfo = $('#user-info')
+                let token = $.cookie('loginToken')
+                if (token === undefined) {
+                    window.location.href = '/login'
+                } else {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/user',
+                        headers: {'authorization': `Bearer ${token}`},
+                        data: {},
+                        success: function (response) {
+                            if (response['result'] === 'success') {
+                                let id = response['id']
+                                userInfo.append(`
+                                <div class="btn btn-primary">${id}</div>
+                                <button onClick="logOut()" class="btn btn-primary">LOGOUT</button>
+                            `)
+                            }
+                        }
+                    })
+                }
+            }
+
+            function logOut() {
+                $.removeCookie('loginToken', {path: '/'})
+                alert('로그아웃')
+                window.location.href = '/login'
+            }
 
             function openClose() {
                 // id 값 post-box의 display 값이 block 이면(= 눈에 보이면)
@@ -69,10 +96,12 @@
             function postArticle() {
                 let url_give = $('#post-url').val()
                 let comment_give = $('#post-comment').val()
+                let token = $.cookie('loginToken')
 
                 $.ajax({
                     type: "POST",
                     url: "/memo",
+                    headers: {'authorization': `Bearer ${token}`},
                     data: {'url_give': url_give, 'comment_give': comment_give},
                     success: function (response) { // 성공하면
                         if (response["result"] == "success") {
@@ -108,45 +137,16 @@
 
             function makeCard(url, title, desc, comment, image) {
                 let tempHtml = `<div class="card">
-                    <img class="card-img-top"
-                         src="${image}"
-                         alt="Card image cap">
-                        <div class="card-body">
-                            <a href="${url}" class="card-title">${title}</a>
-                            <p class="card-text">${desc}</p>
-                            <p class="card-text comment">${comment}</p>
-                        </div>
-                </div>`
+                <img class="card-img-top"
+                     src="${image}"
+                     alt="Card image cap">
+                <div class="card-body">
+                    <a href="${url}" class="card-title">${title}</a>
+                    <p class="card-text">${desc}</p>
+                    <p class="card-text comment">${comment}</p>
+                </div>
+            </div>`
                 $('#cards-box').append(tempHtml)
-            }
-
-            function setUserInfo() {
-                let userInfo = $('#user-info')
-                let token = $.cookie('loginToken')
-
-                if (token === undefined) {
-                    window.location.href = '/login'
-                } else {
-                    // JWT에 해당하는 사용자 정보를 받아오기
-                    $.ajax({
-                        type: 'POST',
-                        url: '/user',
-                        headers: {'authorization': `Bearer ${token}`},
-                        data: {},
-                        success: function (response) {
-                            if (response['result'] === 'success') {
-                                let id = response['id']
-                                userInfo.append(`
-                                <div class="btn btn-primary">${id}</div>
-                                <div class="btn btn-primary" onClick="logOut()">LOGOUT</div>
-                            `)
-                            } else {
-                                alert('다시 로그인해주세요.')
-                                window.location.href = '/login'
-                            }
-                        }
-                    })
-                }
             }
         </script>
     </head>
