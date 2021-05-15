@@ -82,16 +82,15 @@ def api_login():
             # JWT 유효 기간 - 이 시간 이후에는 JWT 인증이 불가능합니다.
             'exp': datetime.datetime.utcnow() + expiration_time,
         }
-        token = jwt.encode(payload, JWT_SECRET).decode()
+        token = jwt.encode(payload, JWT_SECRET)
         return jsonify({'result': 'success', 'token': token, 'msg': '로그인 성공'})
 
     return jsonify({'result': 'fail', 'msg': '아이디 비밀번호 불일치'})
 
 
+# 사용자 정보 불러오기
 @app.route('/user', methods=['POST'])
 def user():
-
-
     token_receive = request.headers['authorization']
     token = token_receive.split()[1]
     print(token)
@@ -115,51 +114,48 @@ def save_memo():
 
     print(url_receive, comment_receive)
 
+    # JWT 추출
     token_receive = request.headers['authorization']
     token = token_receive.split()[1]
     print(token)
 
     try:
+        # JWT 페이로드에서 id 확인
         payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
-        print(payload)
         id = payload['id']
-        return jsonify({'result': 'success', 'id': id})
-    except jwt.exceptions.ExpiredSignatureError:
-        # try 부분을 실행했지만 위와 같은 에러가 난다면
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36'}  # chrome
+        response = requests.get(
+            url_receive,
+            headers=headers
+        )
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        title = soup.select_one('meta[property="og:title"]')
+        url = soup.select_one('meta[property="og:url"]')
+        image = soup.select_one('meta[property="og:image"]')
+        description = soup.select_one('meta[property="og:description"]')
+        print(title['content'])
+        print(url['content'])
+        print(image['content'])
+        print(description['content'])
+
+        document = {
+            'title': title['content'],
+            'image': image['content'],
+            'description': description['content'],
+            'url': url['content'],
+            'comment': comment_receive,
+            'id': payload['id']
+        }
+        db.articles.insert_one(document)
+
+        return jsonify(
+            {'result': 'success', 'msg': '저장했습니다.'}
+        )
+    except jwt.ExpiredSignatureError:
         return jsonify({'result': 'fail', 'msg': '로그인 시간이 만료되었습니다.'})
-
-
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36'}  # chrome
-    response = requests.get(
-        url_receive,
-        headers=headers
-    )
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    title = soup.select_one('meta[property="og:title"]')
-    url = soup.select_one('meta[property="og:url"]')
-    image = soup.select_one('meta[property="og:image"]')
-    description = soup.select_one('meta[property="og:description"]')
-    print(title['content'])
-    print(url['content'])
-    print(image['content'])
-    print(description['content'])
-
-    document = {
-        'title': title['content'],
-        'image': image['content'],
-        'description': description['content'],
-        'url': url['content'],
-        'comment': comment_receive,
-        'id': payload['id']
-    }
-    db.articles.insert_one(document)
-
-    return jsonify(
-        {'result': 'success', 'msg': '저장했습니다.'}
-    )
-
 
 @app.route('/memo', methods=['GET'])
 def list_memo():

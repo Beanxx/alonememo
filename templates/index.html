@@ -63,9 +63,9 @@
                             if (response['result'] === 'success') {
                                 let id = response['id']
                                 userInfo.append(`
-                                <div class="btn btn-primary">${id}</div>
-                                <button onClick="logOut()" class="btn btn-primary">LOGOUT</button>
-                            `)
+                                    <div class="btn btn-primary">${id}</div>
+                                    <button onClick="logOut()" class="btn btn-primary">LOGOUT</button>
+                                `)
                             }
                         }
                     })
@@ -73,8 +73,11 @@
             }
 
             function logOut() {
+                // 쿠키의 JWT 삭제
                 $.removeCookie('loginToken', {path: '/'})
                 alert('로그아웃')
+
+                // 로그인 페이지로 이동
                 window.location.href = '/login'
             }
 
@@ -150,6 +153,7 @@
             }
         </script>
     </head>
+
     <body>
         <div class="wrap">
             <div id="user-info"></div>
