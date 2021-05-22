@@ -2,7 +2,31 @@
 #
 import hashlib
 
+import jwt
+
 from tests.conftest import db
+
+def test_로그인(client):
+    data = {
+        'id_give': 'tester02',
+        'pw_give': 'test'
+    }
+
+    # 먼저 회원가입
+    client.post('/api/register', data=data)
+
+    response = client.post(
+        '/api/login',
+        data=data
+    )
+
+    assert response.status_code == 200
+    assert response.json['result'] == 'success'
+
+    token = response.json['token']
+    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+    assert payload['id'] == 'tester02'
+
 
 
 def test_회원가입(client):
