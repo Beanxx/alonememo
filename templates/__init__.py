@@ -1,7 +1,7 @@
-from flask import Flask, render_template, request, jsonify
-from pymongo import MongoClient
 import requests as requests
 from bs4 import BeautifulSoup
+from flask import Flask, render_template, request, jsonify
+from pymongo import MongoClient
 
 # 플라스크 웹 서버 생성하기
 app = Flask(__name__)
@@ -67,7 +67,6 @@ def list_memo():
     }
 
     return jsonify(result)
-
 
 
 # app.py 파일을 직접 실행 시킬 때 동작시킴
