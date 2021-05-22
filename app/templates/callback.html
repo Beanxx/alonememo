@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <script type="text/javascript" src="https://static.nid.naver.com/js/naverLogin_implicit-1.0.3.js"
+            charset="utf-8"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+    var naver_id_login = new naver_id_login("{{ CLIENT_ID }}", "{{ CALLBACK_URL }}");
+    // 접근 토큰 값 출력
+    alert(naver_id_login.oauthParams.access_token);
+    // 네이버 사용자 프로필 조회
+    naver_id_login.get_naver_userprofile("naverSignInCallback()");
+
+    // 네이버 사용자 프로필 조회 이후 프로필 정보를 처리할 callback function
+    function naverSignInCallback() {
+        alert(naver_id_login.getProfileData('email'));
+        let naverId = naver_id_login.getProfileData('id');
+
+        // 새로운 회원가입 API 만들기
+        // POST api/register/naver
+        // 네이버 id 값으로 회원가입(db.users 저장)
+        // 비밀번호(pw)는 없음 ''
+        // 이미 가입했으면 더 가입하지 않는다. (중복가입 방지!)
+        // 이후에 JWT 만들어서 리턴
+        // 여기서 쿠키에 JWT 저장
+        // index.html 리다이렉트
+        $.ajax({
+            type: 'POST',
+            url: '/api/register/naver',
+            data: {'naver_id': naverId},
+            success: function (response) {
+                if (response['result'] === 'success') {
+                    $.cookie('loginToken', response['token'])
+                    window.location.href = '/'
+                } else {
+                    alert('로그인에 실패했습니다.')
+                    window.location.href = '/login'
+                }
+            }
+        })
+
+
+
+
+        // $.ajax({
+        //     type: "POST",
+        //     url: "api/register/naver",
+        //     data: {"naver_id": naverId},
+        //     success: function (response) {
+        //         if (response['result'] === 'success') {
+        //             $.cookie('loginToken', response['token'])
+        //             window.location.href = '/'
+        //         } else {
+        //             alert('로그인 실패')
+        //             window.location.href = '/login'
+        //         }
+        //     }
+        // })
+    }
+</script>
+</body>
+</html>
