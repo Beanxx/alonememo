@@ -9,7 +9,6 @@ client = MongoClient('localhost', 27017)
 db = client.get_database(test_database_name)
 
 
-
 @pytest.fixture
 def app():
     test_app = flask_app.create_app(test_database_name)
