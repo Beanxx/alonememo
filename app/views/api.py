@@ -74,3 +74,4 @@ def api_register():
     db.users.insert_one({'id': id, 'pw': pw_hash})
 
     return jsonify({'result': 'success'})
+
